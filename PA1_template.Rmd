@@ -7,19 +7,70 @@ output:
 
 
 ## Loading and preprocessing the data
+library(ggplot2)
+activity <- read.csv("./data/activity.csv")
+activity$date <- as.POSIXct(activity$date, "%Y-%m-%d")
+weekday <- weekdays(activity$date)
+activity <- cbind(activity,weekday)
 
+summary(activity)
 
 
 ## What is mean total number of steps taken per day?
-
+total_steps <- with(activity, aggregate(steps, by = list(date), FUN = sum, na.rm = TRUE))
+names(total_steps) <- c("date", "steps")
+hist(total_steps$steps, main = "Mean total number of steps taken per day", xlab = "Mean total steps taken per day", col = "red", ylim = c(0,20), breaks = seq(0,25000, by=2500))
 
 
 ## What is the average daily activity pattern?
-
+avg_daily_activity <- aggregate(activity$steps, by=list(activity$interval), FUN=mean, na.rm=TRUE)
+names(avg_daily_activity) <- c("interval", "mean")
+plot(avg_daily_activity$interval, avg_daily_activity$mean, type = "l", col="red", lwd = 2, xlab="Interval", ylab="Average number of steps", main="Average Daily Activity Pattern")
 
 
 ## Imputing missing values
 
+# Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+
+sum(is.na(activity$steps))
+
+# Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. Forexample, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+
+imputed_steps <- avg_daily_activity$mean[match(activity$interval, avg_daily_activity$interval)]
+
+
+
+# Create a new dataset that is equal to the original dataset but with the missing data filled in.
+activity_imputed <- transform(activity, steps = ifelse(is.na(activity$steps), yes = imputed_steps, no = activity$steps))
+total_steps_imputed <- aggregate(steps ~ date, activity_imputed, sum)
+names(total_steps_imputed) <- c("date", "daily_steps")
+
+# Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+hist(total_steps_imputed$daily_steps, col = "darkblue", xlab = "Total steps per day", ylim = c(0,30), main = "Total number of steps taken each day", breaks = seq(0,25000,by=2500))
+
+mean(total_steps_imputed$daily_steps)
+
+median(total_steps_imputed$daily_steps)
+
+
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+activity$date <- as.Date(strptime(activity$date, format="%Y-%m-%d"))
+activity$datetype <- sapply(activity$date, function(x) {
+        if (weekdays(x) == "Saturday" | weekdays(x) =="Sunday") 
+                {y <- "Weekend"} else 
+                {y <- "Weekday"}
+                y
+        })
+        
+        
+activity_by_day <- aggregate(steps~interval + datetype, activity, mean, na.rm = TRUE)
+plot<- ggplot(activity_by_day, aes(x = interval , y = steps, color = datetype)) +
+       geom_line() +
+       labs(title = "Average Daily Steps by Day of Week", x = "Interval", y = "Average Number of Steps") +
+       facet_wrap(~datetype, ncol = 1, nrow=2)
+print(plot)
+
+
