@@ -9,8 +9,8 @@ output:
 ## Loading and preprocessing the data
 ```{r}
 library(ggplot2)
-activity <- read.csv("./data/activity.csv")
-activity$date <- as.POSIXct(activity$date, "%Y-%m-%d")
+activity <- read.csv("./activity/activity.csv")
+activity$date <- as.POSIXct(activity$date, "%Y-%m-%d", tz = "America/Chicago")
 weekday <- weekdays(activity$date)
 activity <- cbind(activity,weekday)
 
@@ -55,7 +55,7 @@ names(total_steps_imputed) <- c("date", "daily_steps")
 # Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
 ```{r}
-hist(total_steps_imputed$daily_steps, col = "darkblue", xlab = "Total steps per day", ylim = c(0,30), main = "Total number of steps taken each day", breaks = seq(0,25000,by=2500))
+hist(total_steps_imputed$daily_steps, col = "red", xlab = "Total steps per day", ylim = c(0,30), main = "Total number of steps taken each day", breaks = seq(0,25000,by=2500))
 
 mean(total_steps_imputed$daily_steps)
 
